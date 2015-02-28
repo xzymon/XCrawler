@@ -11,6 +11,8 @@ import com.xzymon.xcrawler.ejb.embryo.RemoteInvocationStateless;
 
 public class EJBsInvocator {
 	private Context context;
+	private RemoteInvocationStateful sfsb;
+	private RemoteInvocationStateless slsb;
 
 	public static final void main(String[] args) throws NamingException {
 		EJBsInvocator invocator = new EJBsInvocator();
@@ -22,7 +24,10 @@ public class EJBsInvocator {
 
 	public String invokeStateful(String param) throws NamingException{
 		System.out.format("Invoking stateful bean with param \"%1$S\"%n", param);
-		String result = lookupRemoteStateful().sample(param);
+		if(sfsb==null){
+			sfsb = lookupRemoteStateful();
+		}
+		String result = sfsb.sample(param);
 		System.out.format("The result is \"%1$s\"%n", result);
 		return result;
 	}
@@ -41,7 +46,10 @@ public class EJBsInvocator {
 	
 	public String invokeStateless(String param) throws NamingException{
 		System.out.format("Invoking stateless bean with param \"%1$S\"%n", param);
-		String result = lookupRemoteStateless().sample(param);
+		if(slsb==null){
+			slsb = lookupRemoteStateless();
+		}
+		String result = slsb.sample(param);
 		System.out.format("The result is \"%1$s\"%n", result);
 		return result;
 	}
