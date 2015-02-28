@@ -23,6 +23,5 @@ public class EmbryoLogging implements Serializable{
 		} finally{
 			logger.info("Przechwycenie zakończone");
 		}
-		
 	}
 }

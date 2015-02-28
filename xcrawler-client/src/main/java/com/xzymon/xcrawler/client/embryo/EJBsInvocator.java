@@ -15,15 +15,16 @@ public class EJBsInvocator {
 	public static final void main(String[] args) throws NamingException {
 		EJBsInvocator invocator = new EJBsInvocator();
 		System.out.format("Sth%n");
-		invocator.invokeStateful();
-		invocator.invokeStateless();
+		String sampleString = "AAA";
+		invocator.invokeStateful(sampleString);
+		invocator.invokeStateless(sampleString);
 	}
 
-	public void invokeStateful() throws NamingException{
-		String sampleString = "AAA";
-		System.out.format("Invoking stateful bean with param \"%1$S\"%n", sampleString);
-		String result = lookupRemoteStateful().sample(sampleString);
+	public String invokeStateful(String param) throws NamingException{
+		System.out.format("Invoking stateful bean with param \"%1$S\"%n", param);
+		String result = lookupRemoteStateful().sample(param);
 		System.out.format("The result is \"%1$s\"%n", result);
+		return result;
 	}
 	
 	public RemoteInvocationStateful lookupRemoteStateful() throws NamingException {
@@ -38,11 +39,11 @@ public class EJBsInvocator {
 		return (RemoteInvocationStateful)context.lookup(lookupName);
 	}
 	
-	public void invokeStateless() throws NamingException{
-		String sampleString = "AAA";
-		System.out.format("Invoking stateless bean with param \"%1$S\"%n", sampleString);
-		String result = lookupRemoteStateless().sample(sampleString);
+	public String invokeStateless(String param) throws NamingException{
+		System.out.format("Invoking stateless bean with param \"%1$S\"%n", param);
+		String result = lookupRemoteStateless().sample(param);
 		System.out.format("The result is \"%1$s\"%n", result);
+		return result;
 	}
 	
 	public RemoteInvocationStateless lookupRemoteStateless() throws NamingException {
