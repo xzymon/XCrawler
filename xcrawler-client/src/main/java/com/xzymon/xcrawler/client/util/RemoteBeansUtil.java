@@ -12,7 +12,7 @@ public class RemoteBeansUtil {
 	public static Context getInvocationContext(){
 		if(ctx==null){
 			try{
-				final Hashtable props = new Hashtable();
+				final Hashtable<String, String> props = new Hashtable<String, String>();
 				props.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
 				ctx = new InitialContext(props);
 			} catch(NamingException ex){
