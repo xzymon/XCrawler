@@ -9,6 +9,9 @@
         <dependent-module archiveName="xcrawler-ejb.jar" deploy-path="/" handle="module:/resource/xcrawler-ejb/xcrawler-ejb">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="jsoup.jar" deploy-path="/lib" handle="module:/classpath/var/M2_REPO/org/jsoup/jsoup/1.8.1/jsoup-1.8.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module archiveName="slf4j-simple.jar" deploy-path="/lib" handle="module:/classpath/var/M2_REPO/org/slf4j/slf4j-simple/1.7.10/slf4j-simple-1.7.10.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>

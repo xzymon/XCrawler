@@ -20,7 +20,7 @@
     <parent>
         <artifactId>xcrawler</artifactId>
         <groupId>com.xzymon</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>xcrawler-ejb</artifactId>
@@ -71,6 +71,13 @@
             <artifactId>hibernate-validator</artifactId>
             <scope>provided</scope>
         </dependency>
+
+		<dependency>
+			<!-- jsoup HTML parser library @ http://jsoup.org/ -->
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.8.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
