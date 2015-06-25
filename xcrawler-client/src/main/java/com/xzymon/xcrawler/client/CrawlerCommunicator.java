@@ -1,11 +1,15 @@
 package com.xzymon.xcrawler.client;
 
+import java.io.InputStream;
+
 import javax.naming.Context;
 import javax.naming.NamingException;
 
 import com.xzymon.xcrawler.client.util.RemoteBeansUtil;
 import com.xzymon.xcrawler.ejb.CrawlerBean;
 import com.xzymon.xcrawler.ejb.RemoteCrawler;
+import com.xzymon.xcrawler.util.CrawlingPolicy;
+import com.xzymon.xcrawler.util.StatusReport;
 
 public class CrawlerCommunicator {
 	
@@ -13,8 +17,16 @@ public class CrawlerCommunicator {
 	
 	private RemoteCrawler crawlerStub;
 	
-	public String crawl(String url){
-		String result = null;
+	public CrawlerCommunicator() throws NamingException {
+		//init();
+	}
+	
+	private void init() throws NamingException{
+		crawlerStub = this.lookupRemoteCrawler();
+	}
+	
+	public Long crawl(CrawlingPolicy policy){
+		Long result = null;
 		if(crawlerStub==null){
 			try {
 				crawlerStub = lookupRemoteCrawler();
@@ -24,7 +36,39 @@ public class CrawlerCommunicator {
 			}
 		}
 		if(crawlerStub!=null){
-			result = crawlerStub.getResource(url);
+			result = crawlerStub.startCrawling(policy);
+		}
+		return result;
+	}
+	
+	public InputStream getResource(String url, Long runId){
+		InputStream is = null;
+		if(crawlerStub==null){
+			try {
+				crawlerStub = lookupRemoteCrawler();
+			} catch (NamingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(crawlerStub!=null){
+			is = crawlerStub.getResourceAsInputStream(url, runId);
+		}
+		return is;
+	}
+	
+	public StatusReport getStatusReport(){
+		StatusReport result = null;
+		if(crawlerStub==null){
+			try {
+				crawlerStub = lookupRemoteCrawler();
+			} catch (NamingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(crawlerStub!=null){
+			result = crawlerStub.getStatusReport();
 		}
 		return result;
 	}

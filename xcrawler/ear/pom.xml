@@ -20,7 +20,7 @@
     <parent>
         <artifactId>xcrawler</artifactId>
         <groupId>com.xzymon</groupId>
-        <version>0.1.0</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>xcrawler-ear</artifactId>

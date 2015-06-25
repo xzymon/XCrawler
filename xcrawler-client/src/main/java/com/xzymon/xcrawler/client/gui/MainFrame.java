@@ -52,6 +52,8 @@ public class MainFrame extends JFrame {
     private JLabel label1;
     private JLabel label2;
     
+    
+    
     private EJBsInvocator invocator;
 	
 	public MainFrame() {
