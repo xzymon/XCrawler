@@ -1,12 +1,17 @@
 package com.xzymon.xcrawler.ejb;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Local;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.interceptor.Interceptors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.xzymon.xcrawler.ejb.interceptor.EmbryoLogging;
 import com.xzymon.xcrawler.model.BranchResource;
@@ -16,6 +21,7 @@ import com.xzymon.xcrawler.model.LeafResource;
 @Local(LocalIndexer.class)
 @Interceptors(EmbryoLogging.class)
 public class IndexerBean implements BusinessIndexer {
+	private Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
 	@EJB
 	private LocalDownloader downloader;
@@ -23,16 +29,23 @@ public class IndexerBean implements BusinessIndexer {
 	@EJB
 	private LocalCrawler crawler;
 	
+	@Resource
+	SessionContext ctx;
+	
 	private long delayDuration;
-	private int retrys;
+	private int retries;
 	
 	@PersistenceContext
 	EntityManager em;
 	
+	public IndexerBean(){
+		logger.info("IndexerBean created.");
+	}
+	
 	@Override
 	public void init(long delayDuration, int maxRetrysPerResource) {
-		this.delayDuration = delayDuration;
-		this.retrys = maxRetrysPerResource;
+		ctx.getContextData().put(ContextData.DELAY_DURATION.getKey(), delayDuration);
+		ctx.getContextData().put(ContextData.RETRIES.getKey(), maxRetrysPerResource);
 	}
 	
 	//zarządaj od indexera zasobu branchResource, podając ile razy ma próbować ponownie jeśli nie udało się pobrać zasobu
@@ -81,7 +94,7 @@ public class IndexerBean implements BusinessIndexer {
 	public boolean bookBranchResource(String url) {
 		BranchResource resource = findBranchResource(url);
 		if(resource == null){
-			downloader.registerBranchToDownload(url, 1, delayDuration);
+			downloader.registerBranchToDownload(url, 1, getDelayDuration());
 			crawler.increaseBranchTriggers();
 		} else {
 			receiveBranchResource(url, 0, resource);
@@ -93,7 +106,7 @@ public class IndexerBean implements BusinessIndexer {
 	public boolean bookLeafResource(String url) {
 		LeafResource resource = findLeafResource(url);
 		if(resource == null){
-			downloader.registerLeafToDownload(url, 1, delayDuration);
+			downloader.registerLeafToDownload(url, 1, getDelayDuration());
 			crawler.increaseLeafTriggers();
 		} else {
 			receiveLeafResource(url, 0, resource);
@@ -104,7 +117,7 @@ public class IndexerBean implements BusinessIndexer {
 	@Override
 	public void receiveBranchResource(String url, int currentRetriedCount, BranchResource resource) {
 			if(resource == null){
-				if(currentRetriedCount<retrys){
+				if(currentRetriedCount<retries){
 					downloader.registerBranchToDownload(url, currentRetriedCount+1, delayDuration);
 					crawler.increaseBranchTriggers();
 				} else {
@@ -123,7 +136,7 @@ public class IndexerBean implements BusinessIndexer {
 	@Override
 	public void receiveLeafResource(String url, int currentRetriedCount, LeafResource resource) {
 		if(resource == null){
-			if(currentRetriedCount<retrys){
+			if(currentRetriedCount<retries){
 				downloader.registerLeafToDownload(url, currentRetriedCount+1, delayDuration);
 				crawler.increaseLeafTriggers();
 			} else {
@@ -137,6 +150,27 @@ public class IndexerBean implements BusinessIndexer {
 			crawler.crawlLeafXPath(url, resource);
 		}
 	}
-
 	
+	public int getDelayDuration(){
+		return ((Integer)ctx.getContextData().get(ContextData.DELAY_DURATION.getKey()));
+	}
+	
+	public int getRetries(){
+		return ((Integer)ctx.getContextData().get(ContextData.RETRIES.getKey()));
+	}
+
+	public static enum ContextData {
+		DELAY_DURATION("delayDuration"),
+		RETRIES("retries");
+		
+		String key;
+		
+		private ContextData(String key){
+			this.key = key;
+		}
+		
+		public String getKey(){
+			return key;
+		}
+	}
 }

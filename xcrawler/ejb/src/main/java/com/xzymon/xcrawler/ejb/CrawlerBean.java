@@ -71,6 +71,7 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 	private EntityManager em;
 	
 	public CrawlerBean(){
+		logger.info("CrawlerBean created.");
 		branchStringURLs = new LinkedHashSet<String>();
 		leafStringURLs = new LinkedHashSet<String>();
 	}
@@ -86,7 +87,12 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 			this.run.setSerializedPolicy(policy);
 			em.persist(this.run);
 			this.run = em.merge(this.run);
-			//this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
+			if(this.indexer!=null){
+				logger.info("this.indexer is not null.");
+			} else {
+				logger.info("this.indexer is NULL!");
+			}
+			this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
 			this.branchStringURLs.add(this.run.getRootURL());
 			crawlGetResource();
 			return this.run.getId();

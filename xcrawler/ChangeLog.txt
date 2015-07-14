@@ -1,2 +1,3 @@
-1.0.0-SNAPSHOT-3
+1.0.0-SNAPSHOT-3 next
+problem to solve: indexer proxy invoked from CrawlerBean instance is NULL (throws NullPointerException)
 problem to solve: org.hibernate.QueryException: Not all named parameters have been set:[]
