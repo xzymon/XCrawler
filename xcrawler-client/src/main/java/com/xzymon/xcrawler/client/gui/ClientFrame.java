@@ -191,7 +191,7 @@ public class ClientFrame extends JFrame {
     
     private boolean isFormValid(){
     	String rootUrl = rootUrlTF.getText();
-    	if(rootUrl!=null && rootUrl!="" && branchRL.getResources()!=null && leafRL.getResources()!=null){
+    	if(rootUrl!=null && rootUrl!="" && /*branchRL.getResources()!=null && */ leafRL.getResources()!=null){
     		return true;
     	}
     	return false;

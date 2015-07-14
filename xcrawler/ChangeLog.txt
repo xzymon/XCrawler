@@ -1,0 +1,2 @@
+1.0.0-SNAPSHOT-3
+problem to solve: org.hibernate.QueryException: Not all named parameters have been set:[]

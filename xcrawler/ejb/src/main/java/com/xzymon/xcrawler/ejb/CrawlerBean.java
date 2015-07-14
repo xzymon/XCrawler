@@ -86,7 +86,7 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 			this.run.setSerializedPolicy(policy);
 			em.persist(this.run);
 			this.run = em.merge(this.run);
-			this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
+			//this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
 			this.branchStringURLs.add(this.run.getRootURL());
 			crawlGetResource();
 			return this.run.getId();

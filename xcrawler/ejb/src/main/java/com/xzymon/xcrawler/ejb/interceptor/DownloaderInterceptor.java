@@ -8,8 +8,10 @@ import javax.interceptor.InvocationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DownloaderInterceptor {
+public class DownloaderInterceptor implements java.io.Serializable {
 
+	private static final long serialVersionUID = 7195233798810888458L;
+	
 	public static final Logger logger = LoggerFactory.getLogger(DownloaderInterceptor.class.getSimpleName());
 	
 	@AroundInvoke

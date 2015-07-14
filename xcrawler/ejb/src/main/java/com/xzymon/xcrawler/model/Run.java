@@ -3,10 +3,13 @@ package com.xzymon.xcrawler.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.annotation.Generated;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
@@ -20,6 +23,7 @@ public class Run implements Serializable{
 	@Transient
 	private static final long serialVersionUID = 4728381033570212496L;
 	@Id
+	@GeneratedValue
 	@Column(name="id")
 	private Long id;
 	@Temporal(TemporalType.TIMESTAMP)

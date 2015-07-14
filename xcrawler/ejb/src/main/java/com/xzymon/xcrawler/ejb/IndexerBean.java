@@ -1,7 +1,5 @@
 package com.xzymon.xcrawler.ejb;
 
-import java.io.IOException;
-
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
@@ -9,8 +7,6 @@ import javax.interceptor.Interceptors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-
-import org.jsoup.nodes.Document;
 
 import com.xzymon.xcrawler.ejb.interceptor.EmbryoLogging;
 import com.xzymon.xcrawler.model.BranchResource;
