@@ -7,6 +7,7 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.interceptor.Interceptors;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -16,12 +17,13 @@ import org.slf4j.LoggerFactory;
 import com.xzymon.xcrawler.ejb.interceptor.EmbryoLogging;
 import com.xzymon.xcrawler.model.BranchResource;
 import com.xzymon.xcrawler.model.LeafResource;
+import com.xzymon.xcrawler.util.CrawlingPolicy;
 
 @Stateless
 @Local(LocalIndexer.class)
 @Interceptors(EmbryoLogging.class)
 public class IndexerBean implements BusinessIndexer {
-	private Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+	private static final Logger logger = LoggerFactory.getLogger(IndexerBean.class.getName());
 
 	@EJB
 	private LocalDownloader downloader;
@@ -40,12 +42,6 @@ public class IndexerBean implements BusinessIndexer {
 	
 	public IndexerBean(){
 		logger.info("IndexerBean created.");
-	}
-	
-	@Override
-	public void init(long delayDuration, int maxRetrysPerResource) {
-		ctx.getContextData().put(ContextData.DELAY_DURATION.getKey(), delayDuration);
-		ctx.getContextData().put(ContextData.RETRIES.getKey(), maxRetrysPerResource);
 	}
 	
 	//zarządaj od indexera zasobu branchResource, podając ile razy ma próbować ponownie jeśli nie udało się pobrać zasobu
@@ -74,51 +70,63 @@ public class IndexerBean implements BusinessIndexer {
 	
 	private BranchResource findBranchResource(String url){
 		BranchResource resource = null;
-		
-		TypedQuery<BranchResource> tquery = em.createQuery("from BranchResource br where br.url=:url", BranchResource.class);
-		resource = tquery.getSingleResult();
-		
+		String qstr = "from BranchResource br where br.url=:url";
+		try{
+			TypedQuery<BranchResource> tquery = em.createQuery(qstr, BranchResource.class);
+			tquery.setParameter("url", url);
+			resource = tquery.getSingleResult();
+		} catch(NoResultException ex){
+			logger.info("Query \"" + qstr + "\" returned no result.");
+			return null;
+		}
 		return resource;
 	}
 	
 	private LeafResource findLeafResource(String url){
 		LeafResource resource = null;
-		
-		TypedQuery<LeafResource> tquery = em.createQuery("from BranchResource br where br.url=:url", LeafResource.class);
-		resource = tquery.getSingleResult();
-		
+		String qstr = "from BranchResource br where br.url=:url";
+		try{
+			TypedQuery<LeafResource> tquery = em.createQuery(qstr, LeafResource.class);
+			tquery.setParameter("url", url);
+			resource = tquery.getSingleResult();
+		} catch(NoResultException ex){
+			logger.info("Query \"" + qstr + "\" returned no result.");
+			return null;
+		}
 		return resource;
 	}
 
 	@Override
-	public boolean bookBranchResource(String url) {
+	public boolean bookBranchResource(String url, BusinessCrawler crawler) {
 		BranchResource resource = findBranchResource(url);
 		if(resource == null){
-			downloader.registerBranchToDownload(url, 1, getDelayDuration());
+			logger.info("Registering URL to download: " + url);
+			downloader.registerBranchToDownload(url, 1, crawler.getPolicy().getTriggerTimeout(), crawler);
 			crawler.increaseBranchTriggers();
 		} else {
-			receiveBranchResource(url, 0, resource);
+			receiveBranchResource(url, 0, resource, crawler);
 		}
 		return false;
 	}
 
 	@Override
-	public boolean bookLeafResource(String url) {
+	public boolean bookLeafResource(String url, BusinessCrawler crawler) {
 		LeafResource resource = findLeafResource(url);
 		if(resource == null){
-			downloader.registerLeafToDownload(url, 1, getDelayDuration());
+			logger.info("Registering URL to download: " + url);
+			downloader.registerLeafToDownload(url, 1, crawler.getPolicy().getTriggerTimeout(), crawler);
 			crawler.increaseLeafTriggers();
 		} else {
-			receiveLeafResource(url, 0, resource);
+			receiveLeafResource(url, 0, resource, crawler);
 		}
 		return false;
 	}
 
 	@Override
-	public void receiveBranchResource(String url, int currentRetriedCount, BranchResource resource) {
+	public void receiveBranchResource(String url, int currentRetriedCount, BranchResource resource, BusinessCrawler crawler) {
 			if(resource == null){
 				if(currentRetriedCount<retries){
-					downloader.registerBranchToDownload(url, currentRetriedCount+1, delayDuration);
+					downloader.registerBranchToDownload(url, currentRetriedCount+1, delayDuration, crawler);
 					crawler.increaseBranchTriggers();
 				} else {
 					//NOTE: resource == null
@@ -134,10 +142,10 @@ public class IndexerBean implements BusinessIndexer {
 	}
 
 	@Override
-	public void receiveLeafResource(String url, int currentRetriedCount, LeafResource resource) {
+	public void receiveLeafResource(String url, int currentRetriedCount, LeafResource resource, BusinessCrawler crawler) {
 		if(resource == null){
 			if(currentRetriedCount<retries){
-				downloader.registerLeafToDownload(url, currentRetriedCount+1, delayDuration);
+				downloader.registerLeafToDownload(url, currentRetriedCount+1, delayDuration, crawler);
 				crawler.increaseLeafTriggers();
 			} else {
 				crawler.crawlLeafXPath(url, null);
@@ -151,26 +159,4 @@ public class IndexerBean implements BusinessIndexer {
 		}
 	}
 	
-	public int getDelayDuration(){
-		return ((Integer)ctx.getContextData().get(ContextData.DELAY_DURATION.getKey()));
-	}
-	
-	public int getRetries(){
-		return ((Integer)ctx.getContextData().get(ContextData.RETRIES.getKey()));
-	}
-
-	public static enum ContextData {
-		DELAY_DURATION("delayDuration"),
-		RETRIES("retries");
-		
-		String key;
-		
-		private ContextData(String key){
-			this.key = key;
-		}
-		
-		public String getKey(){
-			return key;
-		}
-	}
 }

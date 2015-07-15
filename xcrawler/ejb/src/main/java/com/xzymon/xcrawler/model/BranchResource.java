@@ -2,14 +2,15 @@ package com.xzymon.xcrawler.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="branch_resource")
+@Table(name="branch_resources")
 public class BranchResource extends Resource{
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	private Long id;
 
 	public Long getId() {

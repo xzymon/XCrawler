@@ -2,17 +2,18 @@ package com.xzymon.xcrawler.ejb;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateful;
 import javax.interceptor.Interceptors;
 import javax.persistence.EntityManager;
@@ -26,7 +27,6 @@ import com.xzymon.xcrawler.ejb.interceptor.DownloaderInterceptor;
 import com.xzymon.xcrawler.ejb.interceptor.EmbryoLogging;
 import com.xzymon.xcrawler.model.BranchResource;
 import com.xzymon.xcrawler.model.LeafResource;
-import com.xzymon.xcrawler.model.Resource;
 import com.xzymon.xcrawler.model.Run;
 import com.xzymon.xcrawler.util.CrawlingPolicy;
 import com.xzymon.xcrawler.util.ResourcesSearchListener;
@@ -39,8 +39,13 @@ import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
 @Local(LocalCrawler.class)
 @Remote(RemoteCrawler.class)
 @Interceptors(EmbryoLogging.class)
-public class CrawlerBean implements BusinessCrawler, LocalCrawler {
+public class CrawlerBean implements BusinessCrawler, LocalCrawler, Serializable {
+	private static final long serialVersionUID = 4226593422822384427L;
+
 	private static final Logger logger = LoggerFactory.getLogger(CrawlerBean.class.getName());
+	
+	private static Long crawlerCounter = 0l;
+	private Long beanNo;
 
 	private CrawlingPolicy policy;
 	private Run run;
@@ -70,8 +75,17 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 	@PersistenceContext
 	private EntityManager em;
 	
+	@Resource
+	SessionContext ctx;
+	
+	public static synchronized Long getCountAndIncrement(){
+		Long no = crawlerCounter++;
+		return no;
+	}
+	
 	public CrawlerBean(){
-		logger.info("CrawlerBean created.");
+		beanNo = getCountAndIncrement();
+		logger.info("CrawlerBean created with beanNo=" + beanNo + ".");
 		branchStringURLs = new LinkedHashSet<String>();
 		leafStringURLs = new LinkedHashSet<String>();
 	}
@@ -82,7 +96,7 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 		if(policy!=null){
 			this.policy = policy;
 			this.run = new Run();
-			this.run.setRootURL(this.policy.getRootURL());
+			this.run.setRootURL(policy.getRootURL());
 			this.run.setStarted(new Date());
 			this.run.setSerializedPolicy(policy);
 			em.persist(this.run);
@@ -92,7 +106,8 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 			} else {
 				logger.info("this.indexer is NULL!");
 			}
-			this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
+			//to co zakomentowane pod spodem całkowicie nie ma sensu z perspektywy SLSB
+			//this.indexer.init(policy.getTriggerTimeout(), policy.getMaxRetriesPerResource());
 			this.branchStringURLs.add(this.run.getRootURL());
 			crawlGetResource();
 			return this.run.getId();
@@ -133,7 +148,7 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 			}
 		}
 		if(currentBranchStringURL!=null && currentBranchStringURL!=previousBranchStringURL){
-			indexer.bookBranchResource(currentBranchStringURL);
+			indexer.bookBranchResource(currentBranchStringURL, ctx.getBusinessObject(LocalCrawler.class));
 		//zarządaj od indexera zasobu branchResource, podając ile razy ma próbować ponownie jeśli nie udało się pobrać zasobu
 		
 		//niech indexer zwróci informację o tym czy zasób jest mu znany czy musi go pobrać
@@ -193,7 +208,7 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 				}
 			}
 			if(currentLeafStringURL!=null && currentLeafStringURL!=previousLeafStringURL){
-				indexer.bookLeafResource(currentLeafStringURL);
+				indexer.bookLeafResource(currentLeafStringURL, ctx.getBusinessObject(LocalCrawler.class));
 			}
 			
 			if(currentLeafStringURL!=null){
@@ -287,6 +302,14 @@ public class CrawlerBean implements BusinessCrawler, LocalCrawler {
 		this.leafResDownloaded++;
 	}
 
-	
+	@Override
+	public CrawlingPolicy getPolicy(){
+		return this.policy;
+	}
+
+	@Override
+	public Long getBeanNo() {
+		return beanNo;
+	}
 	
 }

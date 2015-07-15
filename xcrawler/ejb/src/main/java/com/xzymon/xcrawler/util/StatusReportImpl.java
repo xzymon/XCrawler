@@ -1,7 +1,11 @@
 package com.xzymon.xcrawler.util;
 
-public class StatusReportImpl implements StatusReport{
+import java.io.Serializable;
 
+public class StatusReportImpl implements StatusReport, Serializable{
+
+	private static final long serialVersionUID = -494052243532952230L;
+	
 	private Long milisFromStart;
 	private Long branchTriggers;
 	private Long leafTriggers;

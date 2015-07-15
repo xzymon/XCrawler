@@ -18,12 +18,12 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 @Entity
-@Table(name="RUNS")
+@Table(name="runs")
 public class Run implements Serializable{
 	@Transient
 	private static final long serialVersionUID = 4728381033570212496L;
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	@Column(name="id")
 	private Long id;
 	@Temporal(TemporalType.TIMESTAMP)

@@ -1,3 +1,30 @@
-1.0.0-SNAPSHOT-3 next
+1.0.0-SNAPSHOT-5
 problem to solve: indexer proxy invoked from CrawlerBean instance is NULL (throws NullPointerException)
+	jak naprawiony - przebudowa logiki: 
+		usunięcie metody IndexerBean.init() //była wbrew logice SLSB
+			przy okazji nie ma sensu stosowania metod pobierających dane z SessionContext
+		zmiana interface'u BusinessIndexer, w szczególności sygnatury metod book___Resource
+			-> przekazywanie przez parametr interface'u Crawlera (Crawler przekazuje siebie dzięki SessionContext.getBusinessObject())
+
 problem to solve: org.hibernate.QueryException: Not all named parameters have been set:[]
+	jak naprawiony - trzeba podpinać parametry
+		TypedQuery<T>.setParameter()
+	
+problem to solve: javax.persistence.NoResultException: No entity found for query
+	jak naprawiony - try/catch dookoła tquery.getSingleResult() - zwracanie null z metody gdy złapany zostanie ten wyjątek
+	
+problem to solve: ARJUNA016029: SynchronizationImple.afterCompletion - failed for org.jboss.as.ejb3.timerservice.persistence.filestore.FileTimerPersistence$PersistTransactionSynchronization@2134e092 with exception: java.lang.RuntimeException: java.io.NotSerializableException: com.xzymon.xcrawler.ejb.DownloaderBean
+	jak naprawiony - zaimplementowanie Serializable przez InfoHolder, gdyż Timer wymaga podstawienia parametru Serializable
+
+problem to solve: DownloaderBean w metodzie @Timeout wywołuje metodę BusinessIndexer.receive___Resource która pobiera parametr BusinessCrawler
+	-> pytanie - jak wysłać do tej metody CrawlerBeana który jest powiązany z klientem? Zwykłe wstrzykiwanie spowoduje że kontener stworzy nową instancję CrawlerBeana, nie powiązaną z pierwotnym klientem.
+	trzebaby gdzieś zapamiętać referencję do "klienckiego" CrawlerBeana, następnie jakoś ją zserializować? aby przy odtwarzaniu przekazać prawidłową referencję do indexera.
+	pomysły?
+		- Stateful ma izolowany context sesji więc do niczego mi się nie przyda
+		- możnaby umieścić referencję do CrawlerBeana (przez interface) w SessionContext DownloaderBean'a pod nazwą powiązaną z RunId CrawlerBeana
+			= wtedy nie byłoby potrzeby jakiegokolwiek korzystania z wstrzykiwania @EJB LocalCrawler
+			
+Chyba jest błąd projektowy:
+ - potrzebny kontakt z klientem -> @Stateful
+ - wyzwalacz czasowy -> @Stateless
+ - zdolność powracania do Stateful z poziomu @Stateless / lub odbieranie stanu (utrwalonego prze @Slsb) przez @Sfsb i przekazywanie do klienta

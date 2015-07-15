@@ -19,12 +19,10 @@ import com.xzymon.xcrawler.model.LeafResource;
 
 
 public interface BusinessIndexer {
-	void init(long delayDuration, int maxRetrysPerResource);
+	boolean bookBranchResource(String url, BusinessCrawler crawler);
+	boolean bookLeafResource(String url, BusinessCrawler crawler);
 	
-	boolean bookBranchResource(String url);
-	boolean bookLeafResource(String url);
-	
-	void receiveBranchResource(String url, int currentRetriedCount, BranchResource resource);
-	void receiveLeafResource(String url, int currentRetriedCount, LeafResource resource);
+	void receiveBranchResource(String url, int currentRetriedCount, BranchResource resource, BusinessCrawler crawler);
+	void receiveLeafResource(String url, int currentRetriedCount, LeafResource resource, BusinessCrawler crawler);
 	
 }
